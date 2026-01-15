@@ -40,6 +40,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import * as XLSX from 'xlsx';
 
 type BookFormValues = z.infer<typeof bookSchema>;
 
@@ -273,66 +274,67 @@ export default function PublisherDashboard() {
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const generatePDFReport = () => {
-    // Create report content
-    const reportContent = `
-PUBLISHER SALES REPORT
-Generated: ${new Date().toLocaleDateString()}
-Publisher: ${currentUser?.organizationName || currentUser?.name}
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
 
-==============================================
-SUMMARY STATISTICS
-==============================================
-Total Books Published: ${myBooks.length}
-Total Sales: NPR ${salesMetrics.totalSales.toFixed(2)}
-Books Sold: ${salesMetrics.totalBooksSold} units
-Net Revenue: NPR ${salesMetrics.netRevenue.toFixed(2)}
-Platform Fee (10%): NPR ${salesMetrics.platformFee.toFixed(2)}
-Profit Margin: ${salesMetrics.profitMargin.toFixed(2)}%
+    // Sheet 1: Summary Statistics
+    const summaryData = [
+      ['PUBLISHER SALES REPORT'],
+      ['Generated:', new Date().toLocaleDateString()],
+      ['Publisher:', currentUser?.organizationName || currentUser?.name],
+      [],
+      ['SUMMARY STATISTICS'],
+      ['Total Books Published', myBooks.length],
+      ['Total Sales', `NPR ${salesMetrics.totalSales.toFixed(2)}`],
+      ['Books Sold', `${salesMetrics.totalBooksSold} units`],
+      ['Net Revenue', `NPR ${salesMetrics.netRevenue.toFixed(2)}`],
+      ['Platform Fee (10%)', `NPR ${salesMetrics.platformFee.toFixed(2)}`],
+      ['Profit Margin', `${salesMetrics.profitMargin.toFixed(2)}%`],
+    ];
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
 
-==============================================
-TOP PERFORMING BOOKS
-==============================================
-${topBooksData.map((book, index) => 
-  `${index + 1}. ${book.name}
-   Units Sold: ${book.sold}
-   Revenue: NPR ${book.revenue.toFixed(2)}`
-).join('\n\n')}
+    // Sheet 2: Top Performing Books
+    const topBooksSheetData = [
+      ['Rank', 'Book Title', 'Units Sold', 'Revenue (NPR)'],
+      ...topBooksData.map((book, index) => [
+        index + 1,
+        book.name,
+        book.sold,
+        book.revenue.toFixed(2),
+      ]),
+    ];
+    const topBooksSheet = XLSX.utils.aoa_to_sheet(topBooksSheetData);
+    XLSX.utils.book_append_sheet(workbook, topBooksSheet, 'Top Performing Books');
 
-==============================================
-MONTHLY SALES TREND
-==============================================
-${monthlySalesData.map(data => 
-  `${data.month}: NPR ${data.revenue.toFixed(2)}`
-).join('\n')}
+    // Sheet 3: Monthly Sales Trend
+    const monthlySalesSheetData = [
+      ['Month', 'Revenue (NPR)'],
+      ...monthlySalesData.map((data) => [data.month, data.revenue.toFixed(2)]),
+    ];
+    const monthlySalesSheet = XLSX.utils.aoa_to_sheet(monthlySalesSheetData);
+    XLSX.utils.book_append_sheet(workbook, monthlySalesSheet, 'Monthly Sales');
 
-==============================================
-BOOK CATALOG
-==============================================
-${myBooks.map((book, index) => 
-  `${index + 1}. ${book.title}
-   Author: ${book.author}
-   Grade: ${book.grade} | Subject: ${book.subject}
-   Price: NPR ${book.price.toFixed(2)}
-   ISBN: ${book.isbn}`
-).join('\n\n')}
+    // Sheet 4: Book Catalog
+    const catalogSheetData = [
+      ['Title', 'Author', 'Grade', 'Subject', 'Price (NPR)', 'ISBN'],
+      ...myBooks.map((book) => [
+        book.title,
+        book.author,
+        book.grade,
+        book.subject,
+        book.price.toFixed(2),
+        book.isbn,
+      ]),
+    ];
+    const catalogSheet = XLSX.utils.aoa_to_sheet(catalogSheetData);
+    XLSX.utils.book_append_sheet(workbook, catalogSheet, 'Book Catalog');
 
-==============================================
-End of Report
-==============================================
-    `.trim();
-
-    // Create blob and download
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Publisher_Report_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    // Generate Excel file and download
+    const fileName = `Publisher_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
     
-    toast.success('Report downloaded successfully');
+    toast.success('Excel report downloaded successfully');
   };
 
   const openDialog = (book?: Book) => {
