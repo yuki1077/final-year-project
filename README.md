@@ -3,7 +3,7 @@
 Modern platform that connects schools, publishers, and administrators. The project now ships with a full-stack setup:
 
 - **Frontend:** React + Vite + Tailwind (mobile-first, dashboard experience)
-- **Backend:** Node.js + Express + MySQL (REST API, JWT auth, Stripe-ready payments, Cloudinary uploads)
+- **Backend:** spring boot MySQL (REST API, JWT auth, Stripe-ready payments, Cloudinary uploads)
 
 ---
 
@@ -135,21 +135,11 @@ These are intercepted on the client store layer so you can preview dashboards be
 
 This project includes **two backend implementations**:
 
-### 1. **Node.js Backend** (Primary - Currently Active)
-- Location: `server/`
-- Framework: Express.js
+### 1. **Java Backend** (Primary - Currently Active)
+- Location: `java backend/`
+- Framework: Spring Boot
 - Database: MySQL
-- Currently integrated with the frontend
-- Full API documentation in server code
 
-### 2. **Java Backend** (Demonstration)
-- Location: `Java Backend/`
-- Framework: Spring Boot 3.2.0
-- Architecture: MVC with proper layering
-- Fully functional REST API with JWT authentication
-- Complete documentation included
+### 2. **Express JS**)
+
 - For learning/reference purposes
-
----
-
-Happy building! Let me know if you'd like seed data, Docker compose, or automated tests next.
